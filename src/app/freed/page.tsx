@@ -155,6 +155,9 @@ export default function FreedPage() {
   const [notesGenerated, setNotesGeneratedState] = useState(false);
   const [isGeneratingNotes, setIsGeneratingNotes] = useState(false);
   const [referralBannerDismissed, setReferralBannerDismissed] = useState(false);
+  const [isEditingLetter, setIsEditingLetter] = useState(false);
+  const [editedLetter, setEditedLetter] = useState('');
+  const [sentAt, setSentAt] = useState<string | null>(null);
 
   // Wrapper to persist notesGenerated to localStorage
   const setNotesGenerated = (value: boolean) => {
@@ -205,6 +208,8 @@ export default function FreedPage() {
       setNotesGenerated(false);
       setIsGeneratingNotes(false);
       setReferralBannerDismissed(false);
+      setIsEditingLetter(false);
+      setEditedLetter('');
     };
 
     window.addEventListener('demo-reset', handleDemoReset);
@@ -221,6 +226,23 @@ export default function FreedPage() {
     await new Promise(resolve => setTimeout(resolve, 2000));
     setNotesGenerated(true);
     setIsGeneratingNotes(false);
+  };
+
+  // Edit letter functions
+  const handleEditLetter = () => {
+    setEditedLetter(referralLetter);
+    setIsEditingLetter(true);
+  };
+
+  const handleSaveLetter = () => {
+    setReferralLetter(editedLetter);
+    updateCurrentReferral({ referralLetter: editedLetter });
+    setIsEditingLetter(false);
+  };
+
+  const handleCancelEdit = () => {
+    setEditedLetter('');
+    setIsEditingLetter(false);
   };
 
   // Use the appropriate summary based on whether notes have been generated
@@ -424,6 +446,7 @@ ${providerData.name}, ${providerData.credentials}
 
   const handleMarkComplete = () => {
     setReferralStatus('sent');
+    setSentAt(new Date().toLocaleString());
     completeReferral();
   };
 
@@ -477,18 +500,24 @@ ${providerData.name}, ${providerData.credentials}
                   <span className="text-xs text-white/50 whitespace-nowrap">{visit.visitDate}</span>
                 </div>
                 <div className="text-xs text-white/60 mt-1">{visit.visitType}</div>
-                {visit.labels.length > 0 && (
-                  <div className="flex gap-1.5 mt-2">
-                    {visit.labels.map((label, idx) => (
-                      <span
-                        key={idx}
-                        className={`${label.color} text-white text-[10px] font-semibold px-2 py-0.5 rounded-full`}
-                      >
-                        {label.text}
-                      </span>
-                    ))}
-                  </div>
-                )}
+                {(() => {
+                  // Filter out Referral label for Alex's visit if notes aren't generated
+                  const visibleLabels = visit.id === 'visit-001' && !notesGenerated
+                    ? visit.labels.filter(l => l.text !== 'Referral')
+                    : visit.labels;
+                  return visibleLabels.length > 0 && (
+                    <div className="flex gap-1.5 mt-2">
+                      {visibleLabels.map((label, idx) => (
+                        <span
+                          key={idx}
+                          className={`${label.color} text-white text-[10px] font-semibold px-2 py-0.5 rounded-full`}
+                        >
+                          {label.text}
+                        </span>
+                      ))}
+                    </div>
+                  );
+                })()}
               </div>
             ))}
           </div>
@@ -645,9 +674,11 @@ ${providerData.name}, ${providerData.credentials}
                       Post-visit Tasks
                     </h3>
                     <div className="space-y-3">
-                      <div className="p-3 border border-amber-200 bg-amber-50 rounded-lg">
+                      <div className={`p-3 border rounded-lg ${referralStatus === 'sent' ? 'border-green-200 bg-green-50' : 'border-amber-200 bg-amber-50'}`}>
                         <div className="flex items-start gap-3">
-                          <div className="w-5 h-5 rounded border-2 border-amber-400 flex-shrink-0 mt-0.5" />
+                          <div className={`w-5 h-5 rounded border-2 flex-shrink-0 mt-0.5 flex items-center justify-center ${referralStatus === 'sent' ? 'border-green-500 bg-green-500' : 'border-amber-400'}`}>
+                            {referralStatus === 'sent' && <Check size={14} strokeWidth={3} className="text-white" />}
+                          </div>
                           <div className="flex-1">
                             <p className="font-medium text-gray-900">Cardiology Referral</p>
                             <p className="text-sm text-gray-600 mt-1">
@@ -958,6 +989,70 @@ ${providerData.name}, ${providerData.credentials}
 
           {activeTab === 'referral' && (
             <div className="space-y-4">
+              {/* Send Referral Packet - PA Activities */}
+              <div className="freed-card">
+                <div className="flex items-center gap-2 mb-4">
+                  <Send className="text-purple-600" size={20} />
+                  <h3 className="font-semibold text-lg">Send Referral Packet</h3>
+                  {referralStatus === 'sent' && sentAt && (
+                    <span className="ml-auto text-green-600 text-sm font-medium flex items-center gap-1">
+                      <Check size={16} />
+                      Sent as of {sentAt}
+                    </span>
+                  )}
+                </div>
+
+                {/* Notes for Finding a Specialist */}
+                <div className="mb-4">
+                  <h4 className="font-medium text-gray-700 mb-2">Notes for Finding a Specialist</h4>
+                  <textarea
+                    value={specialistNotes}
+                    onChange={(e) => setSpecialistNotes(e.target.value)}
+                    placeholder="E.g., Prefer a specialist near downtown, insurance accepted, specific provider recommendations..."
+                    className="w-full p-3 border border-gray-200 rounded-lg text-sm resize-none h-20 focus:outline-none focus:border-purple-400"
+                    disabled={referralStatus === 'sent'}
+                  />
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    onClick={handleDownload}
+                    className="freed-btn-secondary flex items-center gap-2"
+                    disabled={!referralLetter}
+                  >
+                    <Download size={16} />
+                    Download PDF
+                  </button>
+                  <button
+                    onClick={handleEmail}
+                    className="freed-btn-secondary flex items-center gap-2"
+                    disabled={!referralLetter}
+                  >
+                    <Mail size={16} />
+                    Email
+                  </button>
+                  <button
+                    onClick={handlePrint}
+                    className="freed-btn-secondary flex items-center gap-2"
+                    disabled={!referralLetter}
+                  >
+                    <Printer size={16} />
+                    Print
+                  </button>
+                  {referralStatus !== 'sent' && (
+                    <button
+                      onClick={handleMarkComplete}
+                      className="freed-btn-primary flex items-center gap-2 ml-auto"
+                      disabled={!referralLetter}
+                    >
+                      <Check size={16} />
+                      Mark as Sent
+                    </button>
+                  )}
+                </div>
+              </div>
+
               {/* Referral Letter */}
               <div className="freed-card">
                 <div className="flex items-center justify-between mb-4">
@@ -965,11 +1060,30 @@ ${providerData.name}, ${providerData.credentials}
                     <Sparkles className="text-purple-600" size={20} />
                     Referral Letter
                   </h3>
-                  {referralStatus !== 'sent' && (
-                    <button className="text-sm text-purple-600 hover:text-purple-800 flex items-center gap-1">
+                  {referralStatus !== 'sent' && !isEditingLetter && (
+                    <button
+                      onClick={handleEditLetter}
+                      className="text-sm text-purple-600 hover:text-purple-800 flex items-center gap-1"
+                    >
                       <Edit3 size={14} />
                       Edit
                     </button>
+                  )}
+                  {isEditingLetter && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handleCancelEdit}
+                        className="text-sm text-gray-500 hover:text-gray-700 px-3 py-1 rounded border border-gray-300 hover:border-gray-400"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleSaveLetter}
+                        className="text-sm text-white bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded"
+                      >
+                        Save
+                      </button>
+                    </div>
                   )}
                 </div>
                 {isGenerating ? (
@@ -977,6 +1091,13 @@ ${providerData.name}, ${providerData.credentials}
                     <div className="spinner"></div>
                     <span className="ml-3 text-gray-500">Generating referral letter...</span>
                   </div>
+                ) : isEditingLetter ? (
+                  <textarea
+                    value={editedLetter}
+                    onChange={(e) => setEditedLetter(e.target.value)}
+                    className="w-full h-96 p-4 rounded-lg border border-purple-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 font-sans text-sm leading-relaxed resize-y"
+                    autoFocus
+                  />
                 ) : (
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">
@@ -1100,7 +1221,7 @@ ${providerData.name}, ${providerData.credentials}
                 </div>
 
                 {/* Current Medications - Always included */}
-                <div className="mb-6">
+                <div>
                   <h4 className="font-medium text-gray-700 mb-3">Current Medications (always included)</h4>
                   <div className="bg-gray-50 p-3 rounded-lg">
                     {patientData.medications.filter(m => m.active).map(med => (
@@ -1110,68 +1231,6 @@ ${providerData.name}, ${providerData.credentials}
                     ))}
                   </div>
                 </div>
-
-                {/* Specialist Notes */}
-                <div>
-                  <h4 className="font-medium text-gray-700 mb-3">Notes for Finding a Specialist</h4>
-                  <textarea
-                    value={specialistNotes}
-                    onChange={(e) => setSpecialistNotes(e.target.value)}
-                    placeholder="E.g., Prefer a specialist near downtown, or specific provider recommendations..."
-                    className="w-full p-3 border border-gray-200 rounded-lg text-sm resize-none h-24 focus:outline-none focus:border-purple-400"
-                    disabled={referralStatus === 'sent'}
-                  />
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="freed-card">
-                {referralStatus === 'sent' ? (
-                  <div className="flex items-center justify-center gap-2 text-green-600 py-4">
-                    <Check size={24} />
-                    <span className="font-medium">Referral packet sent</span>
-                  </div>
-                ) : (
-                  <>
-                    <h3 className="font-semibold text-lg mb-4">Send Referral Packet</h3>
-                    <div className="flex flex-wrap gap-3">
-                      <button
-                        onClick={handleDownload}
-                        className="freed-btn-secondary flex items-center gap-2"
-                        disabled={!referralLetter}
-                      >
-                        <Download size={16} />
-                        Download PDF
-                      </button>
-                      <button
-                        onClick={handleEmail}
-                        className="freed-btn-secondary flex items-center gap-2"
-                        disabled={!referralLetter}
-                      >
-                        <Mail size={16} />
-                        Email
-                      </button>
-                      <button
-                        onClick={handlePrint}
-                        className="freed-btn-secondary flex items-center gap-2"
-                        disabled={!referralLetter}
-                      >
-                        <Printer size={16} />
-                        Print
-                      </button>
-                    </div>
-                    <div className="border-t mt-4 pt-4">
-                      <button
-                        onClick={handleMarkComplete}
-                        className="freed-btn-primary flex items-center gap-2"
-                        disabled={!referralLetter}
-                      >
-                        <Check size={16} />
-                        Mark as Sent
-                      </button>
-                    </div>
-                  </>
-                )}
               </div>
             </div>
           )}

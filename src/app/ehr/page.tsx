@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { patientData } from '@/data/patient';
+import { getNotesGenerated } from '@/lib/referralState';
 import NavigationButton from '@/components/shared/NavigationButton';
 import {
   User,
@@ -21,6 +22,34 @@ type EHRTab = 'summary' | 'visits' | 'labs' | 'imaging' | 'medications' | 'vital
 export default function EHRPage() {
   const [activeTab, setActiveTab] = useState<EHRTab>('summary');
   const [expandedNotes, setExpandedNotes] = useState<string[]>(['soap-001']);
+  const [notesGenerated, setNotesGenerated] = useState(false);
+
+  // Load notes generated state
+  useEffect(() => {
+    setNotesGenerated(getNotesGenerated());
+
+    // Listen for changes (e.g., when notes are generated in Freed)
+    const handleStorageChange = () => {
+      setNotesGenerated(getNotesGenerated());
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    // Also listen for custom demo-reset event
+    const handleDemoReset = () => {
+      setNotesGenerated(false);
+    };
+    window.addEventListener('demo-reset', handleDemoReset);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('demo-reset', handleDemoReset);
+    };
+  }, []);
+
+  // Filter SOAP notes - hide 11-month visit if notes aren't generated
+  const visibleSoapNotes = notesGenerated
+    ? patientData.soapNotes
+    : patientData.soapNotes.filter(note => note.id !== 'soap-001');
 
   const toggleNoteExpand = (id: string) => {
     setExpandedNotes(prev =>
@@ -284,7 +313,7 @@ export default function EHRPage() {
 
         {activeTab === 'visits' && (
           <div className="space-y-3">
-            {patientData.soapNotes.map(note => (
+            {visibleSoapNotes.map(note => (
               <div key={note.id} className="ehr-card">
                 <button
                   className="ehr-card-header w-full flex items-center justify-between cursor-pointer hover:bg-gray-100"
