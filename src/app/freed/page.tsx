@@ -72,7 +72,7 @@ const visitPreviews = [
     patientName: 'Liam O\'Brien',
     visitDate: 'Jan 13, 2026',
     visitType: 'Follow-up',
-    labels: [{ text: 'Completed', color: 'bg-green-600' }],
+    labels: [],
     isActive: false,
   },
 ];
@@ -595,7 +595,7 @@ ${providerData.name}, ${providerData.credentials}
                     </div>
                     <div>
                       <h3 className="font-semibold text-gray-900">Overview</h3>
-                      <p className="text-gray-600 mt-1">{patientSummary.overview}</p>
+                      <p className="text-gray-600 text-sm mt-1">{patientSummary.overview}</p>
                     </div>
                   </div>
                 </div>
@@ -629,11 +629,11 @@ ${providerData.name}, ${providerData.credentials}
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div className="freed-card">
                     <h3 className="font-semibold text-gray-900 mb-2">Allergies</h3>
-                    <p className="text-gray-600">{patientSummary.allergies}</p>
+                    <p className="text-gray-600 text-sm">{patientSummary.allergies}</p>
                   </div>
                   <div className="freed-card">
                     <h3 className="font-semibold text-gray-900 mb-2">Immunizations</h3>
-                    <p className="text-gray-600">{patientSummary.immunizations}</p>
+                    <p className="text-gray-600 text-sm">{patientSummary.immunizations}</p>
                   </div>
                 </div>
 
@@ -704,7 +704,7 @@ ${providerData.name}, ${providerData.credentials}
                             {referralStatus === 'sent' && (
                               <div className="mt-3 flex items-center gap-2 text-green-600 text-sm font-medium">
                                 <CheckCircle size={16} />
-                                Referral Sent
+                                Sent{sentAt && ` as of ${sentAt}`}
                               </div>
                             )}
                           </div>
