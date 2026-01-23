@@ -11,6 +11,9 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Freed Referral Packet - Demo",
   description: "Prototype demonstrating AI-powered referral packet generation",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({

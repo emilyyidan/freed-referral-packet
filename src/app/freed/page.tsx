@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { patientData, providerData, getMostRecentSOAPNote, getRecentSOAPNotes, hasPendingReferral } from '@/data/patient';
 import NavigationButton from '@/components/shared/NavigationButton';
 import {
@@ -71,6 +72,26 @@ export default function FreedPage() {
         setActiveTab('referral');
       }
     }
+  }, []);
+
+  // Listen for demo reset event
+  useEffect(() => {
+    const handleDemoReset = () => {
+      setActiveTab('note');
+      setShowReferralBuilder(false);
+      setReferralLetter('');
+      setIsGenerating(false);
+      setSelectedItems({
+        soapNotes: ['soap-001', 'soap-002', 'soap-003'],
+        labs: ['lab-003'],
+        imaging: ['img-001'],
+      });
+      setSpecialistNotes('');
+      setReferralStatus('draft');
+    };
+
+    window.addEventListener('demo-reset', handleDemoReset);
+    return () => window.removeEventListener('demo-reset', handleDemoReset);
   }, []);
 
   const toggleSection = (section: keyof typeof expandedSections) => {
@@ -283,10 +304,13 @@ ${providerData.name}, ${providerData.credentials}
       {/* Sidebar */}
       <div className="freed-sidebar flex flex-col">
         <div className="p-4 border-b border-white/10">
-          <div className="flex items-center gap-2 text-xl font-semibold">
-            <Sparkles className="text-purple-400" size={24} />
-            <span>freed</span>
-          </div>
+          <Image
+            src="/freed-logo-white.svg"
+            alt="Freed"
+            width={100}
+            height={24}
+            className="opacity-90"
+          />
         </div>
 
         <div className="p-3">
