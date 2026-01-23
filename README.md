@@ -136,7 +136,6 @@ The mock data tells a coherent clinical story:
 ## Future Improvements
 
 ### Short-term Enhancements
-- [ ] Add ability to edit the generated referral letter inline
 - [ ] Support multiple referral types (not just cardiology)
       
 ### Medium-term Features
