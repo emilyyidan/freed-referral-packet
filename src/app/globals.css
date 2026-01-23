@@ -3,6 +3,22 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Freed brand colors */
+  --freed-primary: #7c3aed;
+  --freed-primary-hover: #6d28d9;
+  --freed-secondary: #f3f0ff;
+  --freed-accent: #a78bfa;
+  --freed-bg: #fafafa;
+  --freed-sidebar: #1a1a2e;
+
+  /* EHR colors - more clinical/utilitarian */
+  --ehr-primary: #2563eb;
+  --ehr-primary-hover: #1d4ed8;
+  --ehr-secondary: #e0f2fe;
+  --ehr-header: #1e3a5f;
+  --ehr-bg: #f1f5f9;
+  --ehr-border: #cbd5e1;
 }
 
 @theme inline {
@@ -12,15 +28,394 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Demo banner */
+.demo-banner {
+  background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  padding: 8px 16px;
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.demo-banner button {
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.4);
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.demo-banner button:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+/* Freed Interface Styles */
+.freed-container {
+  background: var(--freed-bg);
+  min-height: 100vh;
+}
+
+.freed-sidebar {
+  background: var(--freed-sidebar);
+  color: white;
+  width: 220px;
+  min-height: calc(100vh - 40px);
+}
+
+.freed-sidebar-item {
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 14px;
+}
+
+.freed-sidebar-item:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.freed-sidebar-item.active {
+  background: rgba(124, 58, 237, 0.3);
+  border-left: 3px solid var(--freed-primary);
+}
+
+.freed-main {
+  flex: 1;
+  padding: 24px;
+}
+
+.freed-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  padding: 20px;
+}
+
+.freed-btn-primary {
+  background: var(--freed-primary);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: background 0.2s;
+  border: none;
+  cursor: pointer;
+}
+
+.freed-btn-primary:hover {
+  background: var(--freed-primary-hover);
+}
+
+.freed-btn-secondary {
+  background: var(--freed-secondary);
+  color: var(--freed-primary);
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: background 0.2s;
+  border: 1px solid var(--freed-accent);
+  cursor: pointer;
+}
+
+.freed-btn-secondary:hover {
+  background: #ede9fe;
+}
+
+.freed-tab {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  background: transparent;
+}
+
+.freed-tab.active {
+  background: var(--freed-secondary);
+  color: var(--freed-primary);
+}
+
+.freed-tab:hover:not(.active) {
+  background: #f5f5f5;
+}
+
+/* Referral suggestion card */
+.referral-suggestion {
+  background: linear-gradient(135deg, #f3f0ff 0%, #ede9fe 100%);
+  border: 1px solid var(--freed-accent);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.referral-badge {
+  background: var(--freed-primary);
+  color: white;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* EHR Interface Styles */
+.ehr-container {
+  background: var(--ehr-bg);
+  min-height: 100vh;
+}
+
+.ehr-header {
+  background: var(--ehr-header);
+  color: white;
+  padding: 12px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ehr-header h1 {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.ehr-nav {
+  background: white;
+  border-bottom: 1px solid var(--ehr-border);
+  padding: 0 24px;
+  display: flex;
+  gap: 0;
+}
+
+.ehr-nav-item {
+  padding: 12px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.ehr-nav-item:hover {
+  color: var(--ehr-primary);
+  background: #f8fafc;
+}
+
+.ehr-nav-item.active {
+  color: var(--ehr-primary);
+  border-bottom-color: var(--ehr-primary);
+}
+
+.ehr-patient-banner {
+  background: white;
+  border-bottom: 1px solid var(--ehr-border);
+  padding: 16px 24px;
+  display: flex;
+  gap: 32px;
+  font-size: 13px;
+}
+
+.ehr-patient-banner .label {
+  color: #64748b;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.ehr-patient-banner .value {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.ehr-main {
+  padding: 24px;
+}
+
+.ehr-card {
+  background: white;
+  border: 1px solid var(--ehr-border);
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.ehr-card-header {
+  background: #f8fafc;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--ehr-border);
+  font-weight: 600;
+  font-size: 14px;
+  color: #1e293b;
+}
+
+.ehr-card-body {
+  padding: 16px;
+}
+
+.ehr-btn-primary {
+  background: var(--ehr-primary);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.ehr-btn-primary:hover {
+  background: var(--ehr-primary-hover);
+}
+
+.ehr-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.ehr-table th {
+  background: #f8fafc;
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--ehr-border);
+}
+
+.ehr-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.ehr-table tr:hover {
+  background: #f8fafc;
+}
+
+.ehr-status-badge {
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.ehr-status-badge.normal {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.ehr-status-badge.abnormal {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.ehr-status-badge.critical {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* SOAP Note styling for Freed */
+.soap-section {
+  margin-bottom: 16px;
+}
+
+.soap-section-header {
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.soap-section-content {
+  color: #475569;
+  line-height: 1.6;
+  font-size: 14px;
+  white-space: pre-wrap;
+}
+
+/* Loading spinner */
+.spinner {
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid var(--freed-primary);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Checkbox styling */
+.custom-checkbox {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #d1d5db;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.custom-checkbox.checked {
+  background: var(--freed-primary);
+  border-color: var(--freed-primary);
+}
+
+/* Growth chart placeholder */
+.growth-chart {
+  height: 200px;
+  background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  font-size: 14px;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
 }
