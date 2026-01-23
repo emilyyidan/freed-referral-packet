@@ -129,6 +129,7 @@ The mock data tells a coherent clinical story:
 ### UI/UX Elements
 - Search functionality (non-functional)
 - "New visit" button (non-functional)
+- List view of other visits (non-functional)
 - Templates, Settings, Help menu items (non-functional)
 - Growth chart (placeholder only)
 
@@ -137,27 +138,16 @@ The mock data tells a coherent clinical story:
 ### Short-term Enhancements
 - [ ] Add ability to edit the generated referral letter inline
 - [ ] Support multiple referral types (not just cardiology)
-- [ ] Add print functionality for the referral packet
-- [ ] Implement actual fax integration (e.g., via Twilio)
-- [ ] Add confirmation toast/modal after sending referral
-
+      
 ### Medium-term Features
-- [ ] EHR integration via FHIR APIs
+- [ ] Actual EHR integration
 - [ ] Support for multiple patients (patient list/search)
 - [ ] Template management for different referral types
 - [ ] Referral tracking and status updates
-- [ ] Bi-directional communication with specialists
 
-### Long-term Vision
-- [ ] Integration with real scheduling systems
-- [ ] Automated follow-up reminders
-- [ ] Analytics dashboard for referral patterns
-- [ ] Multi-provider/multi-practice support
-- [ ] Mobile-responsive design for tablet use in clinic
-
-### Technical Debt
-- [ ] Add unit tests for state management
-- [ ] Add E2E tests for critical flows
+### Technical Gaps
+- [ ] Write unit tests for state management
+- [ ] Write E2E tests for critical flows
 - [ ] Implement proper error boundaries
 - [ ] Add loading skeletons for better perceived performance
 - [ ] Optimize PDF generation for larger packets
@@ -171,7 +161,3 @@ The mock data tells a coherent clinical story:
 ## License
 
 This is a prototype for demonstration purposes.
-
----
-
-Built with Claude Code
