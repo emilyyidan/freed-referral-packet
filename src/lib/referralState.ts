@@ -17,6 +17,7 @@ export interface ReferralPacket {
 export interface AppState {
   currentReferral: ReferralPacket | null;
   referralHistory: ReferralPacket[];
+  notesGenerated: boolean;
 }
 
 const STORAGE_KEY = 'freed-referral-state';
@@ -24,6 +25,7 @@ const STORAGE_KEY = 'freed-referral-state';
 const defaultState: AppState = {
   currentReferral: null,
   referralHistory: [],
+  notesGenerated: false,
 };
 
 export const getState = (): AppState => {
@@ -32,7 +34,12 @@ export const getState = (): AppState => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
-      return JSON.parse(stored);
+      const parsed = JSON.parse(stored);
+      // Ensure all fields exist (backward compatibility)
+      return {
+        ...defaultState,
+        ...parsed,
+      };
     }
   } catch (e) {
     console.error('Error reading state:', e);
@@ -98,4 +105,14 @@ export const completeReferral = (): void => {
 
 export const getCurrentReferral = (): ReferralPacket | null => {
   return getState().currentReferral;
+};
+
+export const getNotesGenerated = (): boolean => {
+  return getState().notesGenerated ?? false;
+};
+
+export const setNotesGenerated = (generated: boolean): void => {
+  const state = getState();
+  state.notesGenerated = generated;
+  setState(state);
 };

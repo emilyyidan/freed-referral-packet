@@ -115,7 +115,7 @@ body {
 .freed-sidebar {
   background: var(--freed-sidebar);
   color: white;
-  width: 220px;
+  width: 260px;
   min-height: calc(100vh - 40px);
 }
 
@@ -201,15 +201,15 @@ body {
 
 /* Referral suggestion card */
 .referral-suggestion {
-  background: linear-gradient(135deg, #f3f0ff 0%, #ede9fe 100%);
-  border: 1px solid var(--freed-accent);
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 1px solid #f59e0b;
   border-radius: 12px;
   padding: 16px;
   margin-bottom: 20px;
 }
 
 .referral-badge {
-  background: var(--freed-primary);
+  background: #f59e0b;
   color: white;
   font-size: 11px;
   padding: 3px 8px;

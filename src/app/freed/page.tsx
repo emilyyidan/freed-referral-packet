@@ -9,9 +9,6 @@ import {
   Plus,
   ChevronDown,
   ChevronRight,
-  Copy,
-  ThumbsUp,
-  ThumbsDown,
   Sparkles,
   Send,
   Calendar,
@@ -26,11 +23,115 @@ import {
   Mail,
   Printer,
   Edit3,
+  Mic,
+  Heart,
+  AlertCircle,
+  CheckCircle,
 } from 'lucide-react';
-import { getState, updateCurrentReferral, createReferral, completeReferral, getCurrentReferral } from '@/lib/referralState';
+import { getState, updateCurrentReferral, createReferral, completeReferral, getCurrentReferral, getNotesGenerated, setNotesGenerated as persistNotesGenerated } from '@/lib/referralState';
 import jsPDF from 'jspdf';
 
-type Tab = 'note' | 'referral';
+type Tab = 'summary' | 'note' | 'transcript' | 'referral';
+
+// Mock visit data for the sidebar
+const visitPreviews = [
+  {
+    id: 'visit-001',
+    patientName: 'Alex Wang',
+    visitDate: 'Jan 20, 2026',
+    visitType: '11 Month Well Child',
+    labels: [{ text: 'Referral', color: 'bg-amber-500' }],
+    isActive: true,
+  },
+  {
+    id: 'visit-002',
+    patientName: 'Maya Johnson',
+    visitDate: 'Jan 15, 2026',
+    visitType: 'Sick Visit',
+    labels: [],
+    isActive: false,
+  },
+  {
+    id: 'visit-003',
+    patientName: 'Ethan Chen',
+    visitDate: 'Jan 14, 2026',
+    visitType: '4 Year Well Child',
+    labels: [{ text: 'Lab Review', color: 'bg-blue-500' }],
+    isActive: false,
+  },
+  {
+    id: 'visit-004',
+    patientName: 'Sofia Rodriguez',
+    visitDate: 'Jan 14, 2026',
+    visitType: '2 Month Well Child',
+    labels: [],
+    isActive: false,
+  },
+  {
+    id: 'visit-005',
+    patientName: 'Liam O\'Brien',
+    visitDate: 'Jan 13, 2026',
+    visitType: 'Follow-up',
+    labels: [{ text: 'Completed', color: 'bg-green-600' }],
+    isActive: false,
+  },
+];
+
+// Patient summary for Alex Wang - BEFORE the Jan 20 visit (no cardiology referral yet)
+const preVisitSummary = {
+  overview: "11-month-old male with history of small muscular ventricular septal defect (VSD) detected at birth. PDA and PFO resolved by 2 months. Growing well with no cardiac symptoms.",
+  keyConditions: [
+    { condition: "Ventricular Septal Defect (VSD)", status: "Active", notes: "Small muscular VSD identified at birth, monitoring ongoing" },
+    { condition: "Patent Ductus Arteriosus (PDA)", status: "Resolved", notes: "Closed spontaneously by 2 months" },
+    { condition: "Patent Foramen Ovale (PFO)", status: "Resolved", notes: "Closed by 2 months" },
+  ],
+  allergies: "No known allergies",
+  currentMedications: ["Vitamin D 400 IU daily", "Iron supplement 15mg daily"],
+  immunizations: "Up to date for age",
+  growthStatus: "Tracking at 50th percentile for weight and length. Growth velocity appropriate.",
+  lastVisit: "December 18, 2025 - 9 Month Well Child Visit",
+  upcomingActions: ["11-month well child visit scheduled", "Continue routine immunizations"],
+};
+
+// Patient summary for Alex Wang - AFTER the Jan 20 visit (cardiology referral recommended)
+const postVisitSummary = {
+  overview: "11-month-old male with history of small muscular ventricular septal defect (VSD) detected at birth. Cardiac monitoring ongoing with cardiology follow-up recommended.",
+  keyConditions: [
+    { condition: "Ventricular Septal Defect (VSD)", status: "Active", notes: "Small muscular VSD, hemodynamically stable" },
+    { condition: "Patent Ductus Arteriosus (PDA)", status: "Resolved", notes: "Closed spontaneously by 2 months" },
+    { condition: "Patent Foramen Ovale (PFO)", status: "Resolved", notes: "Closed by 2 months" },
+  ],
+  allergies: "No known allergies",
+  currentMedications: ["Vitamin D 400 IU daily", "Iron supplement 15mg daily"],
+  immunizations: "Up to date for age",
+  growthStatus: "Tracking at 50th percentile for weight and length. Growth velocity appropriate.",
+  lastVisit: "January 20, 2026 - 11 Month Well Child Visit",
+  upcomingActions: ["Cardiology referral for VSD evaluation", "12-month well child visit"],
+};
+
+// Mock transcript data for the visit
+const visitTranscript = [
+  { speaker: 'Dr. Kwan', timestamp: '00:00', text: "Good morning! How's Alex doing today?" },
+  { speaker: 'Parent', timestamp: '00:05', text: "He's doing great overall. Very active, crawling everywhere, pulling up on furniture." },
+  { speaker: 'Dr. Kwan', timestamp: '00:12', text: "That's wonderful to hear. Any concerns since your last visit?" },
+  { speaker: 'Parent', timestamp: '00:18', text: "Not really. He's eating well, sleeping through the night most of the time. We were just wondering about the heart murmur follow-up." },
+  { speaker: 'Dr. Kwan', timestamp: '00:28', text: "Yes, let's talk about that. I reviewed his echo from when he was a newborn. The good news is the PDA and PFO have closed. The small muscular VSD is still present but hasn't caused any issues." },
+  { speaker: 'Parent', timestamp: '00:42', text: "Is that something we need to worry about?" },
+  { speaker: 'Dr. Kwan', timestamp: '00:45', text: "Small muscular VSDs often close on their own, and Alex has been doing really well. He's growing appropriately, no signs of heart failure, good activity level. But given he's approaching his first birthday, I'd like to get a cardiology consult just to have a specialist take a look and give us their recommendations for ongoing monitoring." },
+  { speaker: 'Parent', timestamp: '01:02', text: "That makes sense. Should we be limiting his activity at all?" },
+  { speaker: 'Dr. Kwan', timestamp: '01:08', text: "Not at all. Let him play and explore as much as he wants. If the VSD were causing problems, we'd see symptoms like poor feeding, excessive sweating, or failure to thrive - and Alex has none of those." },
+  { speaker: 'Parent', timestamp: '01:20', text: "That's reassuring. His older sister had some ear infections around this age - should we watch for that?" },
+  { speaker: 'Dr. Kwan', timestamp: '01:28', text: "Good question. His ears look clear today. Just watch for tugging at ears, fever, or fussiness. Any changes in appetite or sleep?" },
+  { speaker: 'Parent', timestamp: '01:38', text: "He's been eating more table foods now. We started some soft finger foods and he loves them." },
+  { speaker: 'Dr. Kwan', timestamp: '01:45', text: "Perfect. At this age, you can offer a variety of soft foods. Continue with the vitamin D and iron supplements. Any words yet?" },
+  { speaker: 'Parent', timestamp: '01:55', text: "He says 'mama' and 'dada' and tries to imitate sounds we make." },
+  { speaker: 'Dr. Kwan', timestamp: '02:02', text: "Excellent. That's right on track developmentally. Let me do my examination now." },
+  { speaker: 'Dr. Kwan', timestamp: '03:15', text: "Everything looks great. Heart sounds good - I can hear the murmur but it's soft and hasn't changed. Lungs are clear, abdomen is soft, good muscle tone, and he's hitting all his milestones." },
+  { speaker: 'Parent', timestamp: '03:28', text: "Thank you, doctor. When should we schedule the cardiology appointment?" },
+  { speaker: 'Dr. Kwan', timestamp: '03:32', text: "I'll put in the referral today and they should contact you within a week to schedule. It's not urgent, so within the next month or two is fine. Any other questions?" },
+  { speaker: 'Parent', timestamp: '03:42', text: "I think that covers everything. Thank you!" },
+  { speaker: 'Dr. Kwan', timestamp: '03:45', text: "You're welcome. Alex is doing wonderfully. I'll see you back for his 12-month visit. Take care!" },
+];
 
 export default function FreedPage() {
   const [activeTab, setActiveTab] = useState<Tab>('note');
@@ -51,12 +152,25 @@ export default function FreedPage() {
   });
   const [specialistNotes, setSpecialistNotes] = useState('');
   const [referralStatus, setReferralStatus] = useState<'draft' | 'ready' | 'sent'>('draft');
+  const [notesGenerated, setNotesGeneratedState] = useState(false);
+  const [isGeneratingNotes, setIsGeneratingNotes] = useState(false);
+  const [referralBannerDismissed, setReferralBannerDismissed] = useState(false);
+
+  // Wrapper to persist notesGenerated to localStorage
+  const setNotesGenerated = (value: boolean) => {
+    setNotesGeneratedState(value);
+    persistNotesGenerated(value);
+  };
 
   const recentNote = getMostRecentSOAPNote();
-  const showReferralSuggestion = hasPendingReferral() && !showReferralBuilder && referralStatus !== 'sent';
+  const showReferralSuggestion = hasPendingReferral() && !showReferralBuilder && referralStatus !== 'sent' && notesGenerated;
 
   // Load saved state on mount
   useEffect(() => {
+    // Load notesGenerated state
+    const savedNotesGenerated = getNotesGenerated();
+    setNotesGeneratedState(savedNotesGenerated);
+
     const currentReferral = getCurrentReferral();
     if (currentReferral) {
       setReferralLetter(currentReferral.referralLetter);
@@ -88,6 +202,9 @@ export default function FreedPage() {
       });
       setSpecialistNotes('');
       setReferralStatus('draft');
+      setNotesGenerated(false);
+      setIsGeneratingNotes(false);
+      setReferralBannerDismissed(false);
     };
 
     window.addEventListener('demo-reset', handleDemoReset);
@@ -97,6 +214,17 @@ export default function FreedPage() {
   const toggleSection = (section: keyof typeof expandedSections) => {
     setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
+
+  const generateNotes = async () => {
+    setIsGeneratingNotes(true);
+    // Simulate AI generating notes
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    setNotesGenerated(true);
+    setIsGeneratingNotes(false);
+  };
+
+  // Use the appropriate summary based on whether notes have been generated
+  const patientSummary = notesGenerated ? postVisitSummary : preVisitSummary;
 
   const generateReferralLetter = async () => {
     setIsGenerating(true);
@@ -328,16 +456,43 @@ ${providerData.name}, ${providerData.credentials}
           />
         </div>
 
-        <nav className="flex-1 mt-2">
-          <div className="freed-sidebar-item active">
-            <Calendar size={18} />
-            <span>Visits</span>
+        <div className="flex-1 mt-2 overflow-y-auto">
+          <div className="px-3 pb-2">
+            <span className="text-xs font-semibold text-white/50 uppercase tracking-wider">Recent Visits</span>
           </div>
-          <div className="freed-sidebar-item">
-            <FileText size={18} />
-            <span>Templates</span>
+          <div className="space-y-1 px-2">
+            {visitPreviews.map((visit) => (
+              <div
+                key={visit.id}
+                className={`p-3 rounded-lg cursor-pointer transition-all ${
+                  visit.isActive
+                    ? 'bg-purple-600/30 border border-purple-500/50'
+                    : 'hover:bg-white/5 border border-transparent'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <span className={`font-medium text-sm ${visit.isActive ? 'text-white' : 'text-white/90'}`}>
+                    {visit.patientName}
+                  </span>
+                  <span className="text-xs text-white/50 whitespace-nowrap">{visit.visitDate}</span>
+                </div>
+                <div className="text-xs text-white/60 mt-1">{visit.visitType}</div>
+                {visit.labels.length > 0 && (
+                  <div className="flex gap-1.5 mt-2">
+                    {visit.labels.map((label, idx) => (
+                      <span
+                        key={idx}
+                        className={`${label.color} text-white text-[10px] font-semibold px-2 py-0.5 rounded-full`}
+                      >
+                        {label.text}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
-        </nav>
+        </div>
 
         <div className="mt-auto border-t border-white/10">
           <div className="freed-sidebar-item">
@@ -357,7 +512,7 @@ ${providerData.name}, ${providerData.credentials}
         <div className="bg-white border-b px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <h2 className="font-semibold text-lg">{patientData.firstName} {patientData.lastName}</h2>
-            <span className="text-sm text-gray-500">{patientData.age} • {patientData.sex}</span>
+            <span className="text-sm text-gray-500">{patientData.age} • {patientData.sex} • Jan 20, 2026</span>
           </div>
           <NavigationButton />
         </div>
@@ -365,11 +520,25 @@ ${providerData.name}, ${providerData.credentials}
         {/* Tabs */}
         <div className="bg-white border-b px-6 py-2 flex items-center gap-2">
           <button
+            className={`freed-tab ${activeTab === 'summary' ? 'active' : ''}`}
+            onClick={() => setActiveTab('summary')}
+          >
+            <User size={14} className="inline mr-2" />
+            Patient Summary
+          </button>
+          <button
             className={`freed-tab ${activeTab === 'note' ? 'active' : ''}`}
             onClick={() => setActiveTab('note')}
           >
             <FileText size={14} className="inline mr-2" />
             Note
+          </button>
+          <button
+            className={`freed-tab ${activeTab === 'transcript' ? 'active' : ''}`}
+            onClick={() => setActiveTab('transcript')}
+          >
+            <Mic size={14} className="inline mr-2" />
+            Transcript
           </button>
           {showReferralBuilder && (
             <button
@@ -385,15 +554,227 @@ ${providerData.name}, ${providerData.credentials}
 
         {/* Content Area */}
         <div className="freed-main overflow-auto">
+          {/* Patient Summary Tab */}
+          {activeTab === 'summary' && (
+            <div className="grid grid-cols-2 gap-6 items-start">
+              {/* Left column - Patient Summary */}
+              <div>
+                <div className="freed-card mb-4">
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="p-2 bg-purple-100 rounded-lg">
+                      <Heart className="text-purple-600" size={20} />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">Overview</h3>
+                      <p className="text-gray-600 mt-1">{patientSummary.overview}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="freed-card mb-4">
+                  <h3 className="font-semibold text-gray-900 mb-3">Key Conditions</h3>
+                  <div className="space-y-3">
+                    {patientSummary.keyConditions.map((item, idx) => (
+                      <div key={idx} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                        {item.status === 'Active' ? (
+                          <AlertCircle className="text-amber-500 mt-0.5" size={18} />
+                        ) : (
+                          <CheckCircle className="text-green-500 mt-0.5" size={18} />
+                        )}
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-gray-900">{item.condition}</span>
+                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                              item.status === 'Active' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
+                            }`}>
+                              {item.status}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 mt-1">{item.notes}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="freed-card">
+                    <h3 className="font-semibold text-gray-900 mb-2">Allergies</h3>
+                    <p className="text-gray-600">{patientSummary.allergies}</p>
+                  </div>
+                  <div className="freed-card">
+                    <h3 className="font-semibold text-gray-900 mb-2">Immunizations</h3>
+                    <p className="text-gray-600">{patientSummary.immunizations}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="freed-card">
+                    <h3 className="font-semibold text-gray-900 mb-2">Current Medications</h3>
+                    <ul className="space-y-1">
+                      {patientSummary.currentMedications.map((med, idx) => (
+                        <li key={idx} className="text-gray-600 text-sm">• {med}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="freed-card">
+                    <h3 className="font-semibold text-gray-900 mb-2">Growth Status</h3>
+                    <p className="text-gray-600 text-sm">{patientSummary.growthStatus}</p>
+                  </div>
+                </div>
+
+                <div className="freed-card">
+                  <h3 className="font-semibold text-gray-900 mb-2">Upcoming Actions</h3>
+                  <ul className="space-y-1">
+                    {patientSummary.upcomingActions.map((action, idx) => (
+                      <li key={idx} className="text-gray-600 text-sm flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 bg-purple-500 rounded-full"></span>
+                        {action}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              {/* Right column - Post-visit Tasks (only shown when notes are generated) */}
+              {notesGenerated ? (
+                <div>
+                  <div className="freed-card">
+                    <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                      <ClipboardList size={18} className="text-purple-600" />
+                      Post-visit Tasks
+                    </h3>
+                    <div className="space-y-3">
+                      <div className="p-3 border border-amber-200 bg-amber-50 rounded-lg">
+                        <div className="flex items-start gap-3">
+                          <div className="w-5 h-5 rounded border-2 border-amber-400 flex-shrink-0 mt-0.5" />
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-900">Cardiology Referral</p>
+                            <p className="text-sm text-gray-600 mt-1">
+                              Refer to Pediatric Cardiology for VSD evaluation and monitoring
+                            </p>
+                            {referralStatus !== 'sent' && !showReferralBuilder && (
+                              <button
+                                onClick={generateReferralLetter}
+                                className="mt-3 w-full bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2"
+                              >
+                                <Sparkles size={16} />
+                                Generate Referral Packet
+                              </button>
+                            )}
+                            {showReferralBuilder && referralStatus !== 'sent' && (
+                              <button
+                                onClick={() => setActiveTab('referral')}
+                                className="mt-3 w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors"
+                              >
+                                View Referral Packet
+                              </button>
+                            )}
+                            {referralStatus === 'sent' && (
+                              <div className="mt-3 flex items-center gap-2 text-green-600 text-sm font-medium">
+                                <CheckCircle size={16} />
+                                Referral Sent
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <div className="freed-card bg-gray-50 border-dashed border-2 border-gray-200">
+                    <h3 className="font-semibold text-gray-400 mb-4 flex items-center gap-2">
+                      <ClipboardList size={18} />
+                      Post-visit Tasks
+                    </h3>
+                    <p className="text-sm text-gray-400 text-center py-4">
+                      Tasks will appear here after visit notes are generated
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Transcript Tab */}
+          {activeTab === 'transcript' && (
+            <div className="max-w-4xl">
+              <div className="freed-card">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Visit Transcript</h3>
+                    <p className="text-sm text-gray-500">January 20, 2026 • 11 Month Well Child Visit</p>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <Mic size={14} />
+                    <span>3:48 duration</span>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  {visitTranscript.map((entry, idx) => (
+                    <div key={idx} className="flex gap-3">
+                      <div className="flex-shrink-0 w-16 text-right">
+                        <span className="text-xs text-gray-400 font-mono">{entry.timestamp}</span>
+                      </div>
+                      <div className="flex-1">
+                        <span className={`text-sm font-medium ${
+                          entry.speaker === 'Dr. Kwan' ? 'text-purple-600' : 'text-blue-600'
+                        }`}>
+                          {entry.speaker}
+                        </span>
+                        <p className="text-gray-700 mt-0.5">{entry.text}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Note Tab */}
           {activeTab === 'note' && (
             <>
+              {/* Empty state when notes haven't been generated */}
+              {!notesGenerated && (
+                <div className="flex flex-col items-center justify-center py-20">
+                  <div className="text-center max-w-md">
+                    <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <FileText className="text-purple-600" size={32} />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">No notes yet</h3>
+                    <p className="text-gray-600 mb-6">
+                      We are mimicking the process where Freed generates the SOAP notes from the visit transcript.
+                    </p>
+                    <button
+                      onClick={generateNotes}
+                      disabled={isGeneratingNotes}
+                      className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 mx-auto"
+                    >
+                      {isGeneratingNotes ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          Generating notes...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles size={20} />
+                          Generate AI Notes
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Referral Suggestion Card */}
-              {showReferralSuggestion && (
+              {notesGenerated && showReferralSuggestion && !referralBannerDismissed && (
                 <div className="referral-suggestion">
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3">
-                      <div className="p-2 bg-purple-100 rounded-lg">
-                        <Sparkles className="text-purple-600" size={20} />
+                      <div className="p-2 bg-amber-100 rounded-lg">
+                        <Sparkles className="text-amber-600" size={20} />
                       </div>
                       <div>
                         <div className="flex items-center gap-2 mb-1">
@@ -409,11 +790,14 @@ ${providerData.name}, ${providerData.credentials}
                     <div className="flex gap-2">
                       <button
                         onClick={generateReferralLetter}
-                        className="freed-btn-primary text-sm"
+                        className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors"
                       >
                         Create Referral Packet
                       </button>
-                      <button className="p-2 hover:bg-white/50 rounded-lg">
+                      <button
+                        onClick={() => setReferralBannerDismissed(true)}
+                        className="p-2 hover:bg-white/50 rounded-lg"
+                      >
                         <X size={18} className="text-gray-400" />
                       </button>
                     </div>
@@ -421,7 +805,8 @@ ${providerData.name}, ${providerData.credentials}
                 </div>
               )}
 
-              {/* Visit Info */}
+              {/* Visit Info - only show when notes are generated */}
+              {notesGenerated && (
               <div className="freed-card mb-4">
                 <div className="flex items-center justify-between mb-4">
                   <div>
@@ -435,11 +820,6 @@ ${providerData.name}, ${providerData.credentials}
                       {recentNote.provider}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button className="p-2 hover:bg-gray-100 rounded-lg" title="Copy all">
-                      <Copy size={18} className="text-gray-400" />
-                    </button>
-                  </div>
                 </div>
 
                 {/* Visit Summary */}
@@ -452,11 +832,6 @@ ${providerData.name}, ${providerData.credentials}
                       {expandedSections.summary ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                       Visit Summary
                     </span>
-                    <div className="flex items-center gap-1">
-                      <ThumbsUp size={14} className="text-gray-300 hover:text-green-500 cursor-pointer" />
-                      <ThumbsDown size={14} className="text-gray-300 hover:text-red-500 cursor-pointer" />
-                      <Copy size={14} className="text-gray-300 hover:text-gray-600 cursor-pointer ml-2" />
-                    </div>
                   </button>
                   {expandedSections.summary && (
                     <div className="soap-section-content mt-2 bg-gray-50 p-4 rounded-lg">
@@ -468,14 +843,13 @@ ${providerData.name}, ${providerData.credentials}
                 {/* Subjective */}
                 <div className="soap-section">
                   <button
-                    className="soap-section-header w-full flex items-center justify-between hover:bg-gray-50 p-2 -m-2 rounded-lg"
+                    className="soap-section-header w-full flex items-center hover:bg-gray-50 p-2 -m-2 rounded-lg"
                     onClick={() => toggleSection('subjective')}
                   >
                     <span className="flex items-center gap-2">
                       {expandedSections.subjective ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                       Subjective
                     </span>
-                    <Copy size={14} className="text-gray-300 hover:text-gray-600 cursor-pointer" />
                   </button>
                   {expandedSections.subjective && (
                     <div className="soap-section-content mt-2">
@@ -490,14 +864,13 @@ ${providerData.name}, ${providerData.credentials}
                 {/* Objective */}
                 <div className="soap-section">
                   <button
-                    className="soap-section-header w-full flex items-center justify-between hover:bg-gray-50 p-2 -m-2 rounded-lg"
+                    className="soap-section-header w-full flex items-center hover:bg-gray-50 p-2 -m-2 rounded-lg"
                     onClick={() => toggleSection('objective')}
                   >
                     <span className="flex items-center gap-2">
                       {expandedSections.objective ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                       Objective
                     </span>
-                    <Copy size={14} className="text-gray-300 hover:text-gray-600 cursor-pointer" />
                   </button>
                   {expandedSections.objective && (
                     <div className="soap-section-content mt-2">
@@ -509,14 +882,13 @@ ${providerData.name}, ${providerData.credentials}
                 {/* Assessment */}
                 <div className="soap-section">
                   <button
-                    className="soap-section-header w-full flex items-center justify-between hover:bg-gray-50 p-2 -m-2 rounded-lg"
+                    className="soap-section-header w-full flex items-center hover:bg-gray-50 p-2 -m-2 rounded-lg"
                     onClick={() => toggleSection('assessment')}
                   >
                     <span className="flex items-center gap-2">
                       {expandedSections.assessment ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                       Assessment
                     </span>
-                    <Copy size={14} className="text-gray-300 hover:text-gray-600 cursor-pointer" />
                   </button>
                   {expandedSections.assessment && (
                     <div className="soap-section-content mt-2">
@@ -540,22 +912,47 @@ ${providerData.name}, ${providerData.credentials}
                 {/* Plan */}
                 <div className="soap-section">
                   <button
-                    className="soap-section-header w-full flex items-center justify-between hover:bg-gray-50 p-2 -m-2 rounded-lg"
+                    className="soap-section-header w-full flex items-center hover:bg-gray-50 p-2 -m-2 rounded-lg"
                     onClick={() => toggleSection('plan')}
                   >
                     <span className="flex items-center gap-2">
                       {expandedSections.plan ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                       Plan
                     </span>
-                    <Copy size={14} className="text-gray-300 hover:text-gray-600 cursor-pointer" />
                   </button>
                   {expandedSections.plan && (
                     <div className="soap-section-content mt-2">
                       <pre className="whitespace-pre-wrap font-sans">{recentNote.plan}</pre>
+                      {/* Generate Referral Packet button */}
+                      {referralStatus !== 'sent' && !showReferralBuilder && (
+                        <button
+                          onClick={generateReferralLetter}
+                          className="mt-4 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-2"
+                        >
+                          <Sparkles size={16} />
+                          Generate Referral Packet
+                        </button>
+                      )}
+                      {showReferralBuilder && referralStatus !== 'sent' && (
+                        <button
+                          onClick={() => setActiveTab('referral')}
+                          className="mt-4 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-2"
+                        >
+                          <ClipboardList size={16} />
+                          View Referral Packet
+                        </button>
+                      )}
+                      {referralStatus === 'sent' && (
+                        <div className="mt-4 flex items-center gap-2 text-green-600 text-sm font-medium">
+                          <CheckCircle size={16} />
+                          Referral Sent
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
               </div>
+              )}
             </>
           )}
 
