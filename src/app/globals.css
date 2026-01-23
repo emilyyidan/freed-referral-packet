@@ -109,14 +109,17 @@ body {
 /* Freed Interface Styles */
 .freed-container {
   background: var(--freed-bg);
-  min-height: 100vh;
+  height: calc(100vh - 40px);
+  overflow: hidden;
 }
 
 .freed-sidebar {
   background: var(--freed-sidebar);
   color: white;
   width: 260px;
-  min-height: calc(100vh - 40px);
+  flex-shrink: 0;
+  height: 100%;
+  overflow: hidden;
 }
 
 .freed-sidebar-item {
@@ -462,4 +465,20 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #a1a1a1;
+}
+
+/* Animations */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out forwards;
 }

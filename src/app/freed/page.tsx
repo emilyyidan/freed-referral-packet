@@ -158,6 +158,15 @@ export default function FreedPage() {
   const [isEditingLetter, setIsEditingLetter] = useState(false);
   const [editedLetter, setEditedLetter] = useState('');
   const [sentAt, setSentAt] = useState<string | null>(null);
+  const [promoCardDismissed, setPromoCardDismissed] = useState(false);
+
+  // Reusable component for referral sent status
+  const ReferralSentStatus = ({ className = '' }: { className?: string }) => (
+    <div className={`flex items-center gap-2 text-green-600 text-sm font-medium ${className}`}>
+      <CheckCircle size={16} />
+      Sent{sentAt && ` as of ${sentAt}`}
+    </div>
+  );
 
   // Wrapper to persist notesGenerated to localStorage
   const setNotesGenerated = (value: boolean) => {
@@ -210,6 +219,7 @@ export default function FreedPage() {
       setReferralBannerDismissed(false);
       setIsEditingLetter(false);
       setEditedLetter('');
+      setPromoCardDismissed(false);
     };
 
     window.addEventListener('demo-reset', handleDemoReset);
@@ -523,20 +533,41 @@ ${providerData.name}, ${providerData.credentials}
           </div>
         </div>
 
-        <div className="mt-auto border-t border-white/10">
-          <div className="freed-sidebar-item">
-            <Settings size={18} />
-            <span>Settings</span>
-          </div>
-          <div className="freed-sidebar-item">
-            <HelpCircle size={18} />
-            <span>Help</span>
+        {/* Bottom section */}
+        <div className="mt-auto flex-shrink-0">
+          {/* Upgrade Card - shown after referral packet is generated */}
+          {showReferralBuilder && !promoCardDismissed && (
+            <div className="relative mx-3 mb-3 p-3 bg-gradient-to-br from-purple-600/20 to-purple-800/20 border border-purple-500/30 rounded-lg animate-slide-up">
+              <button
+                onClick={() => setPromoCardDismissed(true)}
+                className="absolute top-2 right-2 p-1 text-white/50 hover:text-white/90 transition-colors"
+              >
+                <X size={14} />
+              </button>
+              <p className="text-white/90 text-sm leading-relaxed mb-3 pr-4">
+                You can generate one referral packet a week on Core. Upgrade to Premier for unlimited referrals.
+              </p>
+              <button className="w-full bg-white text-purple-700 hover:bg-purple-50 py-2 px-3 rounded-lg text-sm font-semibold transition-colors">
+                Get unlimited referrals
+              </button>
+            </div>
+          )}
+
+          <div className="border-t border-white/10">
+            <div className="freed-sidebar-item">
+              <Settings size={18} />
+              <span>Settings</span>
+            </div>
+            <div className="freed-sidebar-item">
+              <HelpCircle size={18} />
+              <span>Help</span>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Bar */}
         <div className="bg-white border-b px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -702,10 +733,7 @@ ${providerData.name}, ${providerData.credentials}
                               </button>
                             )}
                             {referralStatus === 'sent' && (
-                              <div className="mt-3 flex items-center gap-2 text-green-600 text-sm font-medium">
-                                <CheckCircle size={16} />
-                                Sent{sentAt && ` as of ${sentAt}`}
-                              </div>
+                              <ReferralSentStatus className="mt-3" />
                             )}
                           </div>
                         </div>
@@ -974,10 +1002,7 @@ ${providerData.name}, ${providerData.credentials}
                         </button>
                       )}
                       {referralStatus === 'sent' && (
-                        <div className="mt-4 flex items-center gap-2 text-green-600 text-sm font-medium">
-                          <CheckCircle size={16} />
-                          Referral Sent
-                        </div>
+                        <ReferralSentStatus className="mt-4" />
                       )}
                     </div>
                   )}
@@ -994,11 +1019,8 @@ ${providerData.name}, ${providerData.credentials}
                 <div className="flex items-center gap-2 mb-4">
                   <Send className="text-purple-600" size={20} />
                   <h3 className="font-semibold text-lg">Send Referral Packet</h3>
-                  {referralStatus === 'sent' && sentAt && (
-                    <span className="ml-auto text-green-600 text-sm font-medium flex items-center gap-1">
-                      <Check size={16} />
-                      Sent as of {sentAt}
-                    </span>
+                  {referralStatus === 'sent' && (
+                    <ReferralSentStatus className="ml-auto" />
                   )}
                 </div>
 
