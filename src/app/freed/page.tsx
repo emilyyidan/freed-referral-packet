@@ -461,7 +461,20 @@ ${providerData.name}, ${providerData.credentials}
   };
 
   return (
-    <div className="freed-container flex">
+    <div className="freed-container">
+      {/* Narrow screen message */}
+      <div className="min-[670px]:hidden flex items-center justify-center h-full bg-gray-100 p-6">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Stethoscope className="text-purple-600" size={32} />
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Wider Screen Required</h2>
+          <p className="text-gray-600">To view this demo, please use a device with a wider screen.</p>
+        </div>
+      </div>
+
+      {/* Main app - hidden on narrow screens */}
+      <div className="hidden min-[670px]:flex h-full">
       {/* Sidebar */}
       <div className="freed-sidebar flex flex-col">
         <div className="p-4 border-b border-white/10">
@@ -537,7 +550,7 @@ ${providerData.name}, ${providerData.credentials}
         <div className="mt-auto flex-shrink-0">
           {/* Upgrade Card - shown after referral packet is generated */}
           {showReferralBuilder && !promoCardDismissed && (
-            <div className="relative mx-3 mb-3 p-3 bg-gradient-to-br from-purple-600/20 to-purple-800/20 border border-purple-500/30 rounded-lg animate-slide-up">
+            <div className="relative mx-3 mb-3 p-3 bg-gradient-to-br from-purple-500/40 to-purple-600/50 border border-purple-400/60 rounded-lg animate-slide-up">
               <button
                 onClick={() => setPromoCardDismissed(true)}
                 className="absolute top-2 right-2 p-1 text-white/50 hover:text-white/90 transition-colors"
@@ -613,10 +626,10 @@ ${providerData.name}, ${providerData.credentials}
         </div>
 
         {/* Content Area */}
-        <div className="freed-main overflow-auto">
+        <div className={`freed-main overflow-auto ${activeTab === 'referral' ? '!pt-0' : ''}`}>
           {/* Patient Summary Tab */}
           {activeTab === 'summary' && (
-            <div className="grid grid-cols-2 gap-6 items-start">
+            <div className="grid grid-cols-1 min-[1200px]:grid-cols-2 gap-6 items-start">
               {/* Left column - Patient Summary */}
               <div>
                 <div className="freed-card mb-4">
@@ -829,14 +842,20 @@ ${providerData.name}, ${providerData.credentials}
 
               {/* Referral Suggestion Card */}
               {notesGenerated && showReferralSuggestion && !referralBannerDismissed && (
-                <div className="referral-suggestion">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 bg-amber-100 rounded-lg">
+                <div className="referral-suggestion relative">
+                  <button
+                    onClick={() => setReferralBannerDismissed(true)}
+                    className="absolute top-2 right-2 p-2 hover:bg-white/50 rounded-lg"
+                  >
+                    <X size={18} className="text-gray-400" />
+                  </button>
+                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 pr-10">
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <div className="p-2 bg-amber-100 rounded-lg flex-shrink-0 hidden md:block">
                         <Sparkles className="text-amber-600" size={20} />
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
                           <span className="referral-badge">AI Suggested</span>
                           <span className="font-semibold text-gray-900">Referral packet needed</span>
                         </div>
@@ -846,18 +865,12 @@ ${providerData.name}, ${providerData.credentials}
                         </p>
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex items-center flex-shrink-0">
                       <button
                         onClick={generateReferralLetter}
-                        className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors"
+                        className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors whitespace-nowrap"
                       >
                         Create Referral Packet
-                      </button>
-                      <button
-                        onClick={() => setReferralBannerDismissed(true)}
-                        className="p-2 hover:bg-white/50 rounded-lg"
-                      >
-                        <X size={18} className="text-gray-400" />
                       </button>
                     </div>
                   </div>
@@ -1014,29 +1027,8 @@ ${providerData.name}, ${providerData.credentials}
 
           {activeTab === 'referral' && (
             <div className="space-y-4">
-              {/* Send Referral Packet - PA Activities */}
-              <div className="freed-card">
-                <div className="flex items-center gap-2 mb-4">
-                  <Send className="text-purple-600" size={20} />
-                  <h3 className="font-semibold text-lg">Send Referral Packet</h3>
-                  {referralStatus === 'sent' && (
-                    <ReferralSentStatus className="ml-auto" />
-                  )}
-                </div>
-
-                {/* Notes for Finding a Specialist */}
-                <div className="mb-4">
-                  <h4 className="font-medium text-gray-700 mb-2">Notes for Finding a Specialist</h4>
-                  <textarea
-                    value={specialistNotes}
-                    onChange={(e) => setSpecialistNotes(e.target.value)}
-                    placeholder="E.g., Prefer a specialist near downtown, insurance accepted, specific provider recommendations..."
-                    className="w-full p-3 border border-gray-200 rounded-lg text-sm resize-none h-20 focus:outline-none focus:border-purple-400"
-                    disabled={referralStatus === 'sent'}
-                  />
-                </div>
-
-                {/* Action Buttons */}
+              {/* Sticky Action Buttons */}
+              <div className="sticky top-0 z-10 bg-white -mx-6 px-6 py-3 border-b border-gray-200 mb-4">
                 <div className="flex flex-wrap items-center gap-3">
                   <button
                     onClick={handleDownload}
@@ -1062,7 +1054,7 @@ ${providerData.name}, ${providerData.credentials}
                     <Printer size={16} />
                     Print
                   </button>
-                  {referralStatus !== 'sent' && (
+                  {referralStatus !== 'sent' ? (
                     <button
                       onClick={handleMarkComplete}
                       className="freed-btn-primary flex items-center gap-2 ml-auto"
@@ -1071,6 +1063,8 @@ ${providerData.name}, ${providerData.credentials}
                       <Check size={16} />
                       Mark as Sent
                     </button>
+                  ) : (
+                    <ReferralSentStatus className="ml-auto" />
                   )}
                 </div>
               </div>
@@ -1257,6 +1251,7 @@ ${providerData.name}, ${providerData.credentials}
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   );
