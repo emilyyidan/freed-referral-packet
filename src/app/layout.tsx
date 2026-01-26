@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import DemoBanner from "@/components/shared/DemoBanner";
 
@@ -26,6 +27,7 @@ export default function RootLayout({
       <body className={`${inter.variable} antialiased`}>
         <DemoBanner />
         {children}
+        <Analytics />
       </body>
     </html>
   );
