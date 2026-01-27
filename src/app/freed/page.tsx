@@ -626,7 +626,7 @@ ${providerData.name}, ${providerData.credentials}
         </div>
 
         {/* Content Area */}
-        <div className={`freed-main overflow-auto ${activeTab === 'referral' ? '!pt-0' : ''}`}>
+        <div className={`freed-main ${activeTab === 'referral' ? '!pt-0' : ''}`}>
           {/* Patient Summary Tab */}
           {activeTab === 'summary' && (
             <div className="grid grid-cols-1 min-[1200px]:grid-cols-2 gap-6 items-start">
@@ -1135,21 +1135,15 @@ ${providerData.name}, ${providerData.credentials}
                   </h4>
                   <div className="space-y-2">
                     {patientData.soapNotes.slice(0, 4).map(note => (
-                      <label
+                      <div
                         key={note.id}
+                        onClick={() => referralStatus !== 'sent' && toggleItemSelection('soapNotes', note.id)}
                         className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
                           selectedItems.soapNotes.includes(note.id)
                             ? 'border-purple-300 bg-purple-50'
                             : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
-                        <input
-                          type="checkbox"
-                          checked={selectedItems.soapNotes.includes(note.id)}
-                          onChange={() => toggleItemSelection('soapNotes', note.id)}
-                          className="sr-only"
-                          disabled={referralStatus === 'sent'}
-                        />
                         <div className={`custom-checkbox ${selectedItems.soapNotes.includes(note.id) ? 'checked' : ''}`}>
                           {selectedItems.soapNotes.includes(note.id) && <Check size={12} className="text-white" />}
                         </div>
@@ -1157,7 +1151,7 @@ ${providerData.name}, ${providerData.credentials}
                           <div className="font-medium text-sm">{note.visitType}</div>
                           <div className="text-xs text-gray-500">{note.date} • {note.provider}</div>
                         </div>
-                      </label>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -1170,21 +1164,15 @@ ${providerData.name}, ${providerData.credentials}
                   </h4>
                   <div className="space-y-2">
                     {patientData.labResults.map(lab => (
-                      <label
+                      <div
                         key={lab.id}
+                        onClick={() => referralStatus !== 'sent' && toggleItemSelection('labs', lab.id)}
                         className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
                           selectedItems.labs.includes(lab.id)
                             ? 'border-purple-300 bg-purple-50'
                             : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
-                        <input
-                          type="checkbox"
-                          checked={selectedItems.labs.includes(lab.id)}
-                          onChange={() => toggleItemSelection('labs', lab.id)}
-                          className="sr-only"
-                          disabled={referralStatus === 'sent'}
-                        />
                         <div className={`custom-checkbox ${selectedItems.labs.includes(lab.id) ? 'checked' : ''}`}>
                           {selectedItems.labs.includes(lab.id) && <Check size={12} className="text-white" />}
                         </div>
@@ -1193,7 +1181,7 @@ ${providerData.name}, ${providerData.credentials}
                           <div className="text-xs text-gray-500">{lab.date}</div>
                         </div>
                         <span className={`ehr-status-badge ${lab.status}`}>{lab.status}</span>
-                      </label>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -1206,21 +1194,15 @@ ${providerData.name}, ${providerData.credentials}
                   </h4>
                   <div className="space-y-2">
                     {patientData.imagingResults.map(img => (
-                      <label
+                      <div
                         key={img.id}
+                        onClick={() => referralStatus !== 'sent' && toggleItemSelection('imaging', img.id)}
                         className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
                           selectedItems.imaging.includes(img.id)
                             ? 'border-purple-300 bg-purple-50'
                             : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
-                        <input
-                          type="checkbox"
-                          checked={selectedItems.imaging.includes(img.id)}
-                          onChange={() => toggleItemSelection('imaging', img.id)}
-                          className="sr-only"
-                          disabled={referralStatus === 'sent'}
-                        />
                         <div className={`custom-checkbox ${selectedItems.imaging.includes(img.id) ? 'checked' : ''}`}>
                           {selectedItems.imaging.includes(img.id) && <Check size={12} className="text-white" />}
                         </div>
@@ -1231,7 +1213,7 @@ ${providerData.name}, ${providerData.credentials}
                         {img.type === 'Echocardiogram' && (
                           <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">Recommended</span>
                         )}
-                      </label>
+                      </div>
                     ))}
                   </div>
                 </div>
