@@ -2,6 +2,19 @@
 
 A prototype demonstrating AI-powered referral packet generation for pediatric practices. Built as a proof-of-concept for streamlining the referral workflow between primary care physicians and specialists.
 
+_EHR portion of the demo_
+<img width="1700" height="895" alt="Screenshot 2026-02-12 at 6 57 42 PM" src="https://github.com/user-attachments/assets/6df4e24a-a69d-4f9d-a306-903d2b17b6b9" />
+
+_Freed interface portion of the demo_
+<img width="1683" height="946" alt="Screenshot 2026-02-12 at 6 58 02 PM" src="https://github.com/user-attachments/assets/16080fb9-2d8c-47d5-959e-e5cce5e785a1" />
+
+
+## Context
+
+This was built in late Jan 2026 in ~2 hrs (excluding prior user research) primarily using the Claude Code CLI running Opus 4.5. This was the first project where I almost entirely switched over from Cursor to the terminal interface because Opus 4.5 was good enough that I rarely found myself wanting to go into the code itself (except for quick copy changes, etc.). My upstream workflows around research and spec'ing was also largely using Claude.
+
+I was also pleasantly surprised by the quality of the UI/UX that Claude came up with. The underlying API calls are also using Opus 4.5. 
+
 ## Overview
 
 This prototype showcases how AI can assist clinicians in generating comprehensive referral packets by:
@@ -92,27 +105,10 @@ src/
 
 ## What's Hardcoded
 
-The following values are hardcoded for demo purposes:
-
-| Item | Value | Location |
-|------|-------|----------|
-| Patient name | Alex Wang | `src/data/patient.ts` |
-| Patient DOB | February 21, 2025 | `src/data/patient.ts` |
-| Patient age | 11 months | `src/data/patient.ts` |
-| Provider name | Dr. Monica Kwan, MD | `src/data/patient.ts` |
-| Practice name | Golden Gate Pediatrics | `src/data/patient.ts` |
-| Practice address | 3838 California Street, San Francisco, CA 94118 | `src/data/patient.ts` |
-| Practice phone | (415) 555-1234 | `src/data/patient.ts` |
-| Practice fax | (415) 123-5555 | `src/data/patient.ts` |
-| Referral specialty | Cardiology | `src/app/freed/page.tsx` |
-| AI model | claude-opus-4-5-20251101 | `src/app/api/generate-referral/route.ts` |
-
-## What's Mocked
-
-The following data is simulated and does not come from a real EHR:
+All patient data that is shown in the EHR is hard coded for demo purposes
 
 ### Patient Clinical Data
-- **8 SOAP notes** spanning from birth (Feb 2025) to 11-month visit (Jan 2026)
+- **8 SOAP notes** Prior SOAP notes, ahead of the demo (the 11-month visit)
 - **Lab results:** CBC, lead level, metabolic panel, newborn screening
 - **Imaging:** 2 echocardiograms, hip ultrasound, lumbosacral spine ultrasound, kidney ultrasound
 - **Medications:** Vitamin D drops, iron supplement
